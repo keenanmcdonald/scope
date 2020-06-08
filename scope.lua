@@ -9,6 +9,7 @@ local state = 0
 local history = {}
 local rate = 50
 local xaxis = false
+local yrange = 2
 local offset = 24
 
 function init()
@@ -29,7 +30,9 @@ end
 
 function stream(v)
   volts = v
-  history[0] = round(v*-2)
+  --history[0] = round(v*yrange * -1)
+  history[0] = v 
+
   for i=127, 1, -1 do
     history[i] = history[i-1]
   end
@@ -48,7 +51,7 @@ function redraw()
   --screen.pixel(40,40)
   for i = 127, 0, -1 do
     --screen.pixel(i, history[i])
-    screen.move(i, history[i] + offset)
+    screen.move(i, round(history[i]*yrange*-1) + offset)
     screen.line_rel(0, -1)
     screen.stroke()
   end
@@ -74,11 +77,13 @@ function getLength(t)
 end
 
 function enc(n,z)
-  if n==2 then
+  if n==1 then
+    yrange = util.clamp(yrange + z*.5, 1, 8)
+  elseif n==2 then
     rate = util.clamp(rate + z, 1, 100)
     crow.input[1].mode("stream", 1/rate)
   elseif n==3 then
-    offset = util.clamp(offset - z, 0, 60)
+    offset = util.clamp(offset - z, 0, 50)
   end
 end 
 
